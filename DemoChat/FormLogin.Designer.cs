@@ -36,7 +36,6 @@ namespace DemoChat
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.btnRegister = new System.Windows.Forms.Button();
-            this.circularPictureBox1 = new DemoChat.CircularPictureBox();
             this.tbSaltedHash = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -46,6 +45,7 @@ namespace DemoChat
             this.tbSizeSalt = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
+            this.circularPictureBox1 = new DemoChat.CircularPictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.circularPictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -112,16 +112,6 @@ namespace DemoChat
             this.btnRegister.Text = "Register";
             this.btnRegister.UseVisualStyleBackColor = false;
             this.btnRegister.Click += new System.EventHandler(this.btnRegister_Click);
-            // 
-            // circularPictureBox1
-            // 
-            this.circularPictureBox1.Image = global::DemoChat.Properties.Resources.Avatar_Jogador;
-            this.circularPictureBox1.Location = new System.Drawing.Point(103, 98);
-            this.circularPictureBox1.Name = "circularPictureBox1";
-            this.circularPictureBox1.Size = new System.Drawing.Size(163, 147);
-            this.circularPictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.circularPictureBox1.TabIndex = 0;
-            this.circularPictureBox1.TabStop = false;
             // 
             // tbSaltedHash
             // 
@@ -206,6 +196,16 @@ namespace DemoChat
             this.label6.TabIndex = 28;
             this.label6.Text = "Size (Bits)";
             // 
+            // circularPictureBox1
+            // 
+            this.circularPictureBox1.Image = global::DemoChat.Properties.Resources.Avatar_Jogador;
+            this.circularPictureBox1.Location = new System.Drawing.Point(103, 98);
+            this.circularPictureBox1.Name = "circularPictureBox1";
+            this.circularPictureBox1.Size = new System.Drawing.Size(163, 147);
+            this.circularPictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.circularPictureBox1.TabIndex = 0;
+            this.circularPictureBox1.TabStop = false;
+            // 
             // FormLogin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -231,7 +231,8 @@ namespace DemoChat
             this.Font = new System.Drawing.Font("Cambria", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FormLogin";
-            this.Text = "FormLogin";
+            this.Text = "DemoChat";
+            this.Load += new System.EventHandler(this.FormLogin_Load);
             ((System.ComponentModel.ISupportInitialize)(this.circularPictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

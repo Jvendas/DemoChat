@@ -1,0 +1,11 @@
+C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\bin\Debug\ChatServer.exe.config
+C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\bin\Debug\ChatServer.exe
+C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\bin\Debug\ChatServer.pdb
+C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\bin\Debug\ProtocolSI.dll
+C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\obj\Debug\ChatServer.csprojAssemblyReference.cache
+C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\obj\Debug\ChatServer.csproj.CoreCompileInputs.cache
+C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\obj\Debug\ChatServer.csproj.CopyComplete
+C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\obj\Debug\ChatServer.exe
+C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\obj\Debug\ChatServer.pdb
+C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\bin\Debug\Database1.mdf
+C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\bin\Debug\Database1_log.ldf

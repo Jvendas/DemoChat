@@ -106,6 +106,31 @@ namespace DemoChat
         {
 
         }
+
+        
+        private void btnAnexar_Click(object sender, EventArgs e)
+        {
+            /* try
+            {
+                // guardar a mensagem escrita na variavel msg
+                string msg = tbMessage.Text;
+                lbChat.Items.Add();
+                tbMessage.Clear();
+
+                byte[] packet = protocolSI.Make(ProtocolSICmdType.DATA, msg);
+                networkStream.Write(packet, 0, packet.Length);
+
+                while (protocolSI.GetCmdType() != ProtocolSICmdType.ACK) //ProtocolSICmdType is the first byte of the communication protoco
+                {
+                    networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+                }
+            }
+            catch (Exception)
+            {
+
+                MessageBox.Show("Erro ao enviar a mensagem :(");
+            }*/
+        }
     }
 }
 

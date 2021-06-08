@@ -23,6 +23,7 @@ namespace DemoChat
         public FormLogin()
         {
             InitializeComponent();
+            MessageBox.Show("Hello, I'm Doc.Octopus and this is DemoChat. Welcome!");
         }
 
                private bool VerifyLogin(string username, string password)
@@ -30,7 +31,7 @@ namespace DemoChat
             SqlConnection conn = null;
             try
             {
-                // Configurar ligação à Base de Dados
+                // Configurar ligação à Base de Dados 
                 conn = new SqlConnection();
                 conn.ConnectionString = String.Format(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename='C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\Database1.mdf';Integrated Security=True");
                 //conn.ConnectionString = Properties.Settings.Default.connectionString;
@@ -181,6 +182,7 @@ namespace DemoChat
                 MessageBox.Show("Utilizador Invalido");
             }
 
+
         }
 
         private void btnGenerateSaltedHash_Click(object sender, EventArgs e)
@@ -195,9 +197,9 @@ namespace DemoChat
 
             tbSizePass.Text = (hash.Length * 8).ToString();
             tbSizeSalt.Text = (salt.Length * 8).ToString();
-        }
+        } 
 
-        private void label3_Click(object sender, EventArgs e)
+         private void label3_Click(object sender, EventArgs e)
         {
 
         }
@@ -213,5 +215,3 @@ namespace DemoChat
         }
     }
         }
-
-//Adicionar comment de teste

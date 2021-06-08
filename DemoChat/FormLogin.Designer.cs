@@ -153,7 +153,7 @@ namespace DemoChat
             // 
             // btnGenerateSaltedHash
             // 
-            this.btnGenerateSaltedHash.Location = new System.Drawing.Point(224, 583);
+           this.btnGenerateSaltedHash.Location = new System.Drawing.Point(224, 583);
             this.btnGenerateSaltedHash.Name = "btnGenerateSaltedHash";
             this.btnGenerateSaltedHash.Size = new System.Drawing.Size(75, 23);
             this.btnGenerateSaltedHash.TabIndex = 24;

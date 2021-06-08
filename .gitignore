@@ -2,4 +2,5 @@ DemoChat/.vs/DemoChat/v16/*
 DemoChat/bin/Debug/*
 DemoChat/obj/Debug/*
 DemoChat/obj/Release/*
-ChatServer/obj/*
+ChatServer/obj/Debug/*
+ChatServer/bin/Debug/*

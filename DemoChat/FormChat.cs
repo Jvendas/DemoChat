@@ -91,6 +91,21 @@ namespace DemoChat
             formlogin.Close();
            
         }
+
+        private void tbMessage_TextChanged(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void FormChat_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
 

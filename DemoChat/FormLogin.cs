@@ -1,217 +1,271 @@
-﻿using System;
-using System.Data.SqlClient;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
+﻿using EI.SI;
+using System;
 using System.Text;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
 using System.Windows.Forms;
+using System.Net.Sockets;
+using System.Text.Json;
+using DemoChat.models;
+using DemoChat.helpers;
 
 namespace DemoChat
 {
     public partial class FormLogin : Form
     {
-        //Varivavel dos formulario chat
+        private NetworkStream networkStream;
+        private ProtocolSI protocolSI;
+        private TcpClient client;
+
         private FormChat chatForm;
-        private const int SALTSIZE = 8;
-        private const int NUMBER_OF_ITERATIONS = 50000;
 
+        public SymetricKey serverSymetricKey { get; set; }
 
-        public FormLogin()
+        public FormLogin(ProtocolSI protocolSI, NetworkStream networkStream, TcpClient client)
         {
             InitializeComponent();
-            MessageBox.Show("Hello, I'm Doc.Octopus and this is DemoChat. Welcome!");
-        }
 
-               private bool VerifyLogin(string username, string password)
-        {
-            SqlConnection conn = null;
-            try
-            {
-                // Configurar ligação à Base de Dados 
-                conn = new SqlConnection();
-                conn.ConnectionString = String.Format(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename='C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\Database1.mdf';Integrated Security=True");
-                //conn.ConnectionString = Properties.Settings.Default.connectionString;
+            this.protocolSI = protocolSI;
+            this.networkStream = networkStream;
+            this.client = client;
 
-                // Abrir ligação à Base de Dados
-                conn.Open();
+            LogHelper.logToFile("Criando o par de chaves RSA");
+            Helper.CriarChaves();
 
-                // Declaração do comando SQL
-                String sql = "SELECT * FROM Users WHERE Username = @username";
-                SqlCommand cmd = new SqlCommand();
-                cmd.CommandText = sql;
-
-                // Declaração dos parâmetros do comando SQL
-                SqlParameter param = new SqlParameter("@username", username);
-
-                // Introduzir valor ao parâmentro registado no comando SQL
-                cmd.Parameters.Add(param);
-
-                // Associar ligação à Base de Dados ao comando a ser executado
-                cmd.Connection = conn;
-
-                // Executar comando SQL
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (!reader.HasRows)
-                {
-                    throw new Exception("Erro de acesso ao utilizador");
-                }
-
-                // Ler resultado da pesquisa
-                reader.Read();
-
-                // Obter Hash (password + salt)
-                byte[] saltedPasswordHashStored = (byte[])reader["SaltedPasswordHash"];
-
-                // Obter salt
-                byte[] saltStored = (byte[])reader["Salt"];
-
-                conn.Close();
-
-                //byte[] pass = Encoding.UTF8.GetBytes(password);
-
-                byte[] hash = GenerateSaltedHash(password, saltStored);
-
-                return saltedPasswordHashStored.SequenceEqual(hash);
-            }
-            catch
-            {
-                MessageBox.Show("Ocorreu um erro");
-                return false;
-            }
-        }
-
-        private void Register(string username, byte[] saltedPasswordHash, byte[] salt)
-        {
-            SqlConnection conn = null;
-            try
-            {
-
-                // Configurar ligação à Base de Dados
-                conn = new SqlConnection();
-                conn.ConnectionString = String.Format(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename='C:\Users\Karol\Documents\TESP_PSI\1ano\2semestre\topicosSeguranca\trabalhoGrupo\DemoChat\ChatServer\Database1.mdf';Integrated Security=True");
-                //conn.ConnectionString = Properties.Settings.Default.connectionString;
-
-                // Abrir ligação à Base de Dados
-                conn.Open();
-
-                // Declaração dos parâmetros do comando SQL
-                SqlParameter paramUsername = new SqlParameter("@username", username);
-                SqlParameter paramPassHash = new SqlParameter("@saltedPasswordHash", saltedPasswordHash);
-                SqlParameter paramSalt = new SqlParameter("@salt", salt);
-
-                // Declaração do comando SQL
-                String sql = "INSERT INTO Users (Username, SaltedPasswordHash, Salt) VALUES (@username,@saltedPasswordHash,@salt)";
-
-                // Prepara comando SQL para ser executado na Base de Dados
-                SqlCommand cmd = new SqlCommand(sql, conn);
-
-                // Introduzir valores aos parâmentros registados no comando SQL
-                cmd.Parameters.Add(paramUsername);
-                cmd.Parameters.Add(paramPassHash);
-                cmd.Parameters.Add(paramSalt);
-
-                // Executar comando SQL
-                int lines = cmd.ExecuteNonQuery();
-
-                // Fechar ligação
-                conn.Close();
-                if (lines == 0)
-                {
-                    // Se forem devolvidas 0 linhas alteradas então o não foi executado com sucesso
-                    throw new Exception("Erro ao inserir o utilizador");
-                }
-                MessageBox.Show("Registado com sucesso!");
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Erro ao inserir o utilizador:" + e.Message);
-            }
-        }
-
-                private static byte[] GenerateSalt(int size)
-        {
-            //Generate a cryptographic random number.
-            RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
-            byte[] buff = new byte[size];
-            rng.GetBytes(buff);
-            return buff;
-        }
-
-        private static byte[] GenerateSaltedHash(string plainText, byte[] salt)
-        {
-            Rfc2898DeriveBytes rfc2898 = new Rfc2898DeriveBytes(plainText, salt, NUMBER_OF_ITERATIONS);
-            return rfc2898.GetBytes(32);
+            enviarChavePublica();
         }
 
         private void btnRegister_Click(object sender, EventArgs e)
         {
-            String pass = tbPassword.Text;
+            try
+            {
+                LogHelper.logToFile("======= ProtocolSICmdType.USER_OPTION_1 - Registo =======");
 
-            string username = tbUserName.Text;
+                string username = tbUserName.Text;
+                string pass = tbPassword.Text;
 
-            byte[] salt = GenerateSalt(SALTSIZE);
+                if (username.Length == 0 || pass.Length == 0)
+                {
+                    MessageBox.Show("Por favor introduza as credenciais", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
-            byte[] hash = GenerateSaltedHash(pass, salt);
+                LogHelper.logToFile("Encriptadas as credenciais do utlizador com a chave simetrica enviada pelo servidor");
+                Credentials credentials = new Credentials(username, pass);
+                string credentialsEncrypted = Helper.EncryptWithSymmetricKey(credentials.ToString(), serverSymetricKey);
 
-            Register(username, hash, salt);
+                // enviar um pacote de dados com as credencias do cliente (user e password) com o auxilio do modelo Credentials criado
+                byte[] packet = protocolSI.Make(ProtocolSICmdType.USER_OPTION_1, credentialsEncrypted);
+                networkStream.Write(packet, 0, packet.Length);
+                LogHelper.logToFile("Enviadas as credenciais do utilizador: " + credentialsEncrypted);
+
+                // Cliente fica à espera do feedback do servidor no registo
+                while (protocolSI.GetCmdType() != ProtocolSICmdType.ACK)
+                {
+                    networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+
+                    // ler feedback do registo (OK/FAIL)
+                    if (protocolSI.GetCmdType() == ProtocolSICmdType.USER_OPTION_1)
+                    {
+                        string msgRecebida = protocolSI.GetStringFromData();
+                        msgRecebida = Encoding.UTF8.GetString(Convert.FromBase64String(msgRecebida));
+
+                        byte[] ack = protocolSI.Make(ProtocolSICmdType.ACK);
+                        networkStream.Write(ack, 0, ack.Length);
+                        LogHelper.logToFile("Enviado o ACK para o servidor do feedback do registo");
+
+                        switch (msgRecebida)
+                        {
+                            case "ERROR_SYMETRIC_KEY":
+                                LogHelper.logToFile("O registo falhou porque não foi encontrada a symetric key");
+                                MessageBox.Show("O registo falhou porque não foi encontrada a symetric key", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                break;
+
+                            case "ERROR_USERNAME":
+                                LogHelper.logToFile("O registo falhou porque o username já existe");
+                                MessageBox.Show("O registo falhou porque o username já existe", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                break;
+
+                            case "ERROR_REGISTER_INSERT_BD":
+                                LogHelper.logToFile("O registo falhou porque as credenciais são inválidas");
+                                MessageBox.Show("O registo falhou porque as credenciais são inválidas", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                break;
+
+                            case "REGISTER_OK":
+                                LogHelper.logToFile("Registo efetuado com sucesso");
+                                MessageBox.Show("Registo efetuado com sucesso", "Informação", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                break;
+                        }
+                    }
+
+                    if (protocolSI.GetCmdType() == ProtocolSICmdType.ACK)
+                    {
+                        LogHelper.logToFile("Recebido ACK do servidor no envio das credenciais");
+                    }
+                }
+
+                // limpar o buffer do protocolSI para remover o command type do ACK anterior para evitar abrir e fechar a transmissao constantemente (EOT)
+                Array.Clear(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Erro no registo :(");
+            }
         }
 
         private void btnLogin_Click(object sender, EventArgs e)
-            
         {
-
-            //Ao fazer login abre o janela do chat e esconde a janela do login
-            chatForm = new FormChat(this);
-            chatForm.Show();
-            this.Hide();
-       
-            String password = tbPassword.Text;
-            String username = tbUserName.Text;
-
-            if (VerifyLogin(username, password))
+            try
             {
-                MessageBox.Show("Utilizador Valido");
+                LogHelper.logToFile("======= ProtocolSICmdType.USER_OPTION_2 - Login =======");
+
+                string username = tbUserName.Text;
+                string pass = tbPassword.Text;
+
+                if (username.Length == 0 || pass.Length == 0)
+                {
+                    MessageBox.Show("Por favor introduza as credenciais", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                LogHelper.logToFile("Encriptadas as credenciais do utlizador com a chave simetrica enviada pelo servidor");
+                Credentials credentials = new Credentials(username, pass);
+                string credentialsEncrypted = Helper.EncryptWithSymmetricKey(credentials.ToString(), serverSymetricKey);
+
+                // enviar um pacote de dados com as credencias do cliente (user e password) com o auxilio do modelo Credentials criado
+                byte[] packet = protocolSI.Make(ProtocolSICmdType.USER_OPTION_2, credentialsEncrypted);
+                networkStream.Write(packet, 0, packet.Length);
+                LogHelper.logToFile("Enviadas as credenciais do utilizador: " + credentialsEncrypted);
+
+                // login difere do registo a partir daqui
+                bool loginWithSuccess = false;
+
+                // Cliente fica à espera do OK da parte do servidor em relação ao registo
+                while (protocolSI.GetCmdType() != ProtocolSICmdType.ACK)
+                {
+                    networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+
+                    // ler feedback do registo (OK/FAIL)
+                    if (protocolSI.GetCmdType() == ProtocolSICmdType.USER_OPTION_2)
+                    {
+                        string msgRecebida = protocolSI.GetStringFromData();
+                        msgRecebida = Encoding.UTF8.GetString(Convert.FromBase64String(msgRecebida));
+
+                        byte[] ack = protocolSI.Make(ProtocolSICmdType.ACK);
+                        networkStream.Write(ack, 0, ack.Length);
+                        LogHelper.logToFile("Enviado o ACK para o servidor do feedback do login");
+
+                        switch (msgRecebida)
+                        {
+                            case "ERROR_CLIENTID":
+                                LogHelper.logToFile("O login falhou porque o client id é inválido");
+                                MessageBox.Show("O login falhou porque o client id é inválido", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                break;
+
+                            case "ERROR_SYMETRIC_KEY":
+                                LogHelper.logToFile("O login falhou porque não foi encontrada a symetric key");
+                                MessageBox.Show("O login falhou porque não foi encontrada a symetric key", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                break;
+
+                            case "LOGIN_ERROR":
+                                LogHelper.logToFile("O login falhou porque as credenciais são inválidas");
+                                MessageBox.Show("O login falhou porque as credenciais são inválidas", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                break;
+
+                            case "LOGIN_OK":
+                                LogHelper.logToFile("O login efetuado com sucesso");
+                                loginWithSuccess = true;
+                                break;
+                        }
+                    }
+
+                    if (protocolSI.GetCmdType() == ProtocolSICmdType.ACK)
+                    {
+                        LogHelper.logToFile("Recebido ACK do servidor no envio das credenciais");
+                    }
+                }
+
+                // limpar o buffer do protocolSI para remover o command type do ACK anterior para evitar abrir e fechar a transmissao constantemente (EOT)
+                Array.Clear(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+
+                if (loginWithSuccess)
+                {
+                    chatForm = new FormChat(this, protocolSI, networkStream);
+                    chatForm.Show();
+                    this.Hide();
+                }
             }
-            else
+            catch (Exception)
             {
-                MessageBox.Show("Utilizador Invalido");
+                MessageBox.Show("Erro no login :(");
             }
-
-
         }
 
-        private void btnGenerateSaltedHash_Click(object sender, EventArgs e)
+        private void enviarChavePublica()
         {
-            String password = tbPassword.Text;
+            try
+            {
+                LogHelper.logToFile("======= ProtocolSICmdType.PUBLIC_KEY =======");
 
-            byte[] salt = GenerateSalt(SALTSIZE);
-            byte[] hash = GenerateSaltedHash(password, salt);
+                string publicKey = Helper.GetPublicKey();
+                if (publicKey.Length == 0)
+                {
+                    MessageBox.Show("Não foi possível ler a chave publica do disco", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
-            tbSaltedHash.Text = Convert.ToBase64String(hash);
-            tbSalt.Text = Convert.ToBase64String(salt);
+                LogHelper.logToFile("Lida a chave publica do disco com sucesso");
 
-            tbSizePass.Text = (hash.Length * 8).ToString();
-            tbSizeSalt.Text = (salt.Length * 8).ToString();
-        } 
+                // enviar chave publica para o servidor
+                byte[] publicKeyBytes = Encoding.UTF8.GetBytes(publicKey);
+                string publicKeyB64 = Convert.ToBase64String(publicKeyBytes);
 
-         private void label3_Click(object sender, EventArgs e)
-        {
+                byte[] packet = protocolSI.Make(ProtocolSICmdType.PUBLIC_KEY, publicKeyB64);
+                networkStream.Write(packet, 0, packet.Length);
+                LogHelper.logToFile("Enviada a chave publica para o servidor: " + publicKeyB64);
 
+                // espera e processa reposta do servidor
+                while (protocolSI.GetCmdType() != ProtocolSICmdType.ACK)
+                {
+                    networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+
+                    // Cliente recebe a chave simetrica associado à chave publica que enviou anteriormente
+                    if (protocolSI.GetCmdType() == ProtocolSICmdType.PUBLIC_KEY)
+                    {
+                        string msgRecebida = protocolSI.GetStringFromData();
+                        msgRecebida = Helper.DesencryptMessageWithPrivateKey(msgRecebida);
+
+                        serverSymetricKey = JsonSerializer.Deserialize<SymetricKey>(msgRecebida);
+                        LogHelper.logToFile("Recebida a chave simetrica do servidor: " + serverSymetricKey.ToString());
+
+                        byte[] ack = protocolSI.Make(ProtocolSICmdType.ACK);
+                        networkStream.Write(ack, 0, ack.Length);
+                        LogHelper.logToFile("Enviado o ACK para o servidor da chave simetrica recebida");
+                    }
+
+                    if (protocolSI.GetCmdType() == ProtocolSICmdType.ACK)
+                    {
+                        LogHelper.logToFile("Recebido ACK do servidor pelo envio da chave publica");
+                    }
+                }
+
+                // limpar o buffer do protocolSI para remover o command type do ACK anterior para evitar abrir e fechar a transmissao constantemente (EOT)
+                Array.Clear(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Erro ao enviar a chave publica :(");
+            }
         }
 
-        private void label5_Click(object sender, EventArgs e)
+        private void FormLogin_FormClosed(object sender, FormClosedEventArgs e)
         {
+            LogHelper.logToFile("======= ProtocolSICmdType.EOT =======");
 
-        }
+            byte[] ack = protocolSI.Make(ProtocolSICmdType.EOT);
+            networkStream.Write(ack, 0, ack.Length);
+            LogHelper.logToFile("Enviado o End of Transmission para o servidor");
 
-        private void FormLogin_Load(object sender, EventArgs e)
-        {
-
+            networkStream.Close();
+            client.Close();
         }
     }
-        }
+}

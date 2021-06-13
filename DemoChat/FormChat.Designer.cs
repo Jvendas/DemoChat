@@ -71,10 +71,12 @@ namespace DemoChat
             this.tbMessage.Size = new System.Drawing.Size(537, 119);
             this.tbMessage.TabIndex = 1;
             this.tbMessage.TextChanged += new System.EventHandler(this.tbMessage_TextChanged);
+            this.tbMessage.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tbMessage_KeyUp);
             // 
             // btnEnviar
             // 
             this.btnEnviar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(145)))), ((int)(((byte)(108)))));
+            this.btnEnviar.Enabled = false;
             this.btnEnviar.Font = new System.Drawing.Font("Cambria", 14.25F);
             this.btnEnviar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(183)))), ((int)(((byte)(228)))), ((int)(((byte)(199)))));
             this.btnEnviar.Location = new System.Drawing.Point(591, 506);
@@ -94,7 +96,6 @@ namespace DemoChat
             this.label1.Size = new System.Drawing.Size(189, 18);
             this.label1.TabIndex = 4;
             this.label1.Text = "Escreva aqui a sua mensagem";
-            this.label1.Click += new System.EventHandler(this.label1_Click);
             // 
             // lbChat
             // 
@@ -152,7 +153,6 @@ namespace DemoChat
             this.Name = "FormChat";
             this.Text = "DemoChat";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormChat_FormClosed);
-            this.Load += new System.EventHandler(this.FormChat_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
